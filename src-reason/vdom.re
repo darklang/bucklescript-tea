@@ -1,4 +1,5 @@
 /* https://github.com/Matt-Esch/virtual-dom/blob/master/docs/vnode.md */
+
 type applicationCallbacks('msg) = {enqueue: 'msg => unit};
 
 /*
@@ -6,8 +7,10 @@ type applicationCallbacks('msg) = {enqueue: 'msg => unit};
    | UserkeyString of string
    | UserkeyMsg of 'msg
  */
+
 /* Attributes are not properties */
 /* https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes */
+
 type eventHandler('msg) =
   | EventHandlerCallback(string, Web.Node.event => option('msg))
   | EventHandlerMsg('msg);
@@ -34,6 +37,7 @@ type properties('msg) = list(property('msg));
    { renderToHtmlString : unit -> string
    ; patchVNodesIntoElement : 'msg applicationCallbacks ref -> Web.Node.t
    } */
+
 type t('msg) =
   | CommentNode(string)
   | Text(string)
@@ -49,12 +53,13 @@ type t('msg) =
       ref(applicationCallbacks('msg)) => ref(applicationCallbacks('msg)),
       t('msg),
     );
-
 /*  */
 /* | Tagger of (('a -> 'msg) -> 'a t -> 'msg t) */
 /* Custom (key, cbAdd, cbRemove, cbChange, properties, children) */
 /* | Custom of string * (unit -> Web.Node.t) * (Web.Node.t -> unit) * */
+
 /* Nodes */
+
 let noNode = CommentNode("");
 
 let comment = s => CommentNode(s);
@@ -69,9 +74,11 @@ let node = (~namespace="", tagName, ~key="", ~unique="", props, vdoms) =>
 
 /* let arraynode namespace tagName key unique props vdoms =
    ArrayNode (namespace, tagName, key, unique, props, vdoms) */
+
 let lazyGen = (key, fn) => [@implicit_arity] LazyGen(key, fn, ref(noNode));
 
 /* Properties */
+
 let noProp = NoProp;
 
 let prop = (key, value) => [@implicit_arity] RawProp(key, value);
@@ -93,6 +100,7 @@ let style = (key, value) => Style([(key, value)]);
 let styles = s => Style(s);
 
 /* Accessors */
+
 /* TODO:  Need to properly escape and so forth */
 let rec renderToHtmlString =
   fun
@@ -125,6 +133,7 @@ let rec renderToHtmlString =
             ],
           )
       );
+
       String.concat(
         "",
         [
@@ -152,12 +161,13 @@ let rec renderToHtmlString =
   | [@implicit_arity] Tagger(_tagger, vdom) => renderToHtmlString(vdom);
 
 /* TODO:  Make a vdom 'patcher' that binds into the actual DOM for hot-loading into an existing template */
-/* Diffing/Patching */
-let emptyEventHandler: Web.Node.event_cb = (. _ev) => ();
 
+/* Diffing/Patching */
+
+let emptyEventHandler: Web.Node.event_cb = (. _ev) => ();
 let emptyEventCB = _ev => None;
 
-let eventHandler = (callbacks, cb) : Web.Node.event_cb =>
+let eventHandler = (callbacks, cb): Web.Node.event_cb =>
   (. ev) =>
     switch (cb^(ev)) {
     | None => () /* User ignored, do nothing */
@@ -213,23 +223,20 @@ let eventHandler_Mutate =
     newCache :=
       eventHandler_Register(callbacks, elem, newName, newHandlerType)
   | Some(oldcache) =>
-    if (oldName == newName) {
-      let () = newCache := oldCache^;
-      if (compareEventHandlerTypes(oldHandlerType, newHandlerType)) {
-        ();
-      } else {
-        let cb = eventHandler_GetCB(newHandlerType);
-        let () = oldcache.cb := cb;
-        ();
-      };
-    } else {
-      let () = oldCache := eventHandler_Unregister(elem, oldName, oldCache^);
-      let () =
-        newCache :=
-          eventHandler_Register(callbacks, elem, newName, newHandlerType);
-      ();
-    }
+    let () = oldCache := eventHandler_Unregister(elem, oldName, oldCache^);
+    let () =
+      newCache :=
+        eventHandler_Register(callbacks, elem, newName, newHandlerType);
+    ();
   };
+/* if oldName = newName then */
+/*   let () = newCache := !oldCache in */
+/*   (1* if compareEventHandlerTypes oldHandlerType newHandlerType then () *1) */
+/*   (1* else *1) */
+/*   let cb = eventHandler_GetCB newHandlerType in */
+/*   let () = oldcache.cb := cb in */
+/*   () */
+/* else */
 
 let patchVNodesOnElems_PropertiesApply_Add = (callbacks, elem, _idx) =>
   fun
@@ -532,7 +539,7 @@ let genEmptyProps = length => {
   aux([], length);
 };
 
-let mapEmptyProps = props => List.map((_) => noProp, props);
+let mapEmptyProps = props => List.map(_ => noProp, props);
 
 let rec patchVNodesOnElems_ReplaceNode = (callbacks, elem, elems, idx) =>
   [@ocaml.warning "-4"]
@@ -656,6 +663,7 @@ and patchVNodesOnElems_MutateNode =
     } else {
       /* let () = Js.log ("Node test", "non-unique mutate", elem, elems.(idx), newNode) in */
       /* Same node type, just mutate things */
+
       let child = elems[idx];
       let childChildren = Web.Node.childNodes(child);
       let () =
@@ -866,6 +874,7 @@ and patchVNodesOnElems = (callbacks, elem, elems, idx, oldVNodes, newVNodes) =>
       if (oldKey == newKey && oldKey != "") {
         /* let () = Js.log ("Node test", "match", elem, elems.(idx), newNode) in */
         /* Do nothing, they are keyed identically */
+
         patchVNodesOnElems(callbacks, elem, elems, idx + 1, oldRest, newRest);
       } else if (oldKey == "" || newKey == "") {
         let () =
@@ -1032,6 +1041,7 @@ let patchVNodeIntoElement = (callbacks, elem, oldVNode, newVNode) =>
 
 /* Node namespace key tagName properties children  */
 /* | Node of string option * string option * string * 'msg property list * 'msg velem list */
+
 let wrapCallbacks = (func, callbacks) =>
   ref({enqueue: msg => callbacks^.enqueue(func(msg))});
 
@@ -1041,6 +1051,7 @@ let map: ('a => 'b, t('a)) => t('b) =
       ref({enqueue: msg => callbacks^.enqueue(func(msg))});
     [@implicit_arity] Tagger(Obj.magic(tagger), Obj.magic(vdom));
   };
+
 /* let map func vdom =
    let toString () = renderToHtmlString vdom in
    let toDom in

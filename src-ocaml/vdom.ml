@@ -183,17 +183,17 @@ let eventHandler_Mutate callbacks elem (oldName : string) (newName : string) old
   match !oldCache with
   | None -> newCache := eventHandler_Register callbacks elem newName newHandlerType
   | Some oldcache ->
-    if oldName = newName then
-      let () = newCache := !oldCache in
-      if compareEventHandlerTypes oldHandlerType newHandlerType then ()
-      else
-        let cb = eventHandler_GetCB newHandlerType in
-        let () = oldcache.cb := cb in
-        ()
-    else
-      let () = oldCache := eventHandler_Unregister elem oldName !oldCache in
-      let () = newCache := eventHandler_Register callbacks elem newName newHandlerType in
-      ()
+    let () = oldCache := eventHandler_Unregister elem oldName !oldCache in
+    let () = newCache := eventHandler_Register callbacks elem newName newHandlerType in
+    ()
+    (* if oldName = newName then *)
+    (*   let () = newCache := !oldCache in *)
+    (*   (1* if compareEventHandlerTypes oldHandlerType newHandlerType then () *1) *)
+    (*   (1* else *1) *)
+    (*   let cb = eventHandler_GetCB newHandlerType in *)
+    (*   let () = oldcache.cb := cb in *)
+    (*   () *)
+    (* else *)
 
 
 let patchVNodesOnElems_PropertiesApply_Add callbacks elem _idx = function
